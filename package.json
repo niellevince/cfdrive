@@ -1,0 +1,25 @@
+{
+    "name": "cfdrive",
+    "version": "1.0.0",
+    "description": "Cloudflare R2 file uploader",
+    "main": "index.js",
+    "type": "module",
+    "bin": {
+        "cfdrive": "./bin/cli.js"
+    },
+    "scripts": {
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "aws-sdk": "^2.1531.0",
+        "dotenv": "^16.4.1"
+    },
+    "keywords": [
+        "cloudflare",
+        "r2",
+        "upload",
+        "storage"
+    ],
+    "author": "",
+    "license": "MIT"
+}

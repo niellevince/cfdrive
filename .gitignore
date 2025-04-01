@@ -1,0 +1,7 @@
+# Node.js
+node_modules/
+package-lock.json
+.env
+.env.*
+!.env.example
+.cursor/
