@@ -40,10 +40,16 @@ CUSTOM_BUCKET_URL=https://your-public-bucket-url.com
 
 ```bash
 # Upload a file to the default 'temp' path
-cfdrive path/to/file.jpg
+cfdrive upload ./path/to/file.jpg
 
 # Upload a file to a custom path
-cfdrive path/to/file.jpg custom/path
+cfdrive upload ./path/to/file.jpg --path custom/path
+
+# Get help
+cfdrive --help
+
+# Get command-specific help
+cfdrive upload --help
 ```
 
 ## API

@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -95,23 +97,43 @@ function generateDownloadUrl(key) {
 }
 
 async function main() {
-    if (process.argv.length < 3) {
-        console.error('Please provide a file path as an argument');
-        console.error('Usage: cfdrive <local-file-path> [bucket-path]');
-        process.exit(1);
-    }
+    // Use yargs to parse command line arguments
+    const argv = yargs(hideBin(process.argv))
+        .usage('Usage: cfdrive <command> [options]')
+        .command('upload <file>', 'Upload a file to Cloudflare R2', (yargs) => {
+            return yargs
+                .positional('file', {
+                    describe: 'File path to upload',
+                    type: 'string',
+                    demandOption: true
+                })
+                .option('path', {
+                    alias: 'p',
+                    describe: 'Bucket path where the file should be stored',
+                    type: 'string',
+                    default: 'temp'
+                });
+        })
+        .example('cfdrive upload ./image.jpg', 'Upload image.jpg to the default "temp" path')
+        .example('cfdrive upload ./document.pdf --path documents/2023', 'Upload document.pdf to documents/2023 path')
+        .demandCommand(1, 'You need to specify a command.')
+        .help('h')
+        .alias('h', 'help')
+        .version()
+        .epilog('For more information, visit https://github.com/yourusername/cfdrive')
+        .argv;
 
-    const filePath = process.argv[2];
-    const bucketPath = process.argv[3] || 'temp';
-
-    try {
-        const key = await upload(filePath, bucketPath);
-        const downloadUrl = generateDownloadUrl(key);
-        console.log('\nPermanent Download URL:');
-        console.log(downloadUrl);
-    } catch (error) {
-        console.error('Operation failed:', error);
-        process.exit(1);
+    if (argv._[0] === 'upload') {
+        try {
+            const key = await upload(argv.file, argv.path);
+            const downloadUrl = generateDownloadUrl(key);
+            console.log(`\nFile uploaded successfully: ${key}`);
+            console.log('\nPermanent Download URL:');
+            console.log(downloadUrl);
+        } catch (error) {
+            console.error('Operation failed:', error);
+            process.exit(1);
+        }
     }
 }
 
