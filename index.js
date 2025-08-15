@@ -53,7 +53,7 @@ function getContentType(filePath) {
     return contentTypes[ext] || 'application/octet-stream';
 }
 
-async function upload(filePath, bucketPath = '', customName = null) {
+async function upload(filePath, bucketPath = '', customName = null, strict = false) {
     // Resolve the file path relative to the current working directory
     const resolvedPath = path.resolve(process.cwd(), filePath);
 
@@ -63,7 +63,7 @@ async function upload(filePath, bucketPath = '', customName = null) {
 
     const fileName = path.basename(resolvedPath);
     const fileExtension = path.extname(resolvedPath);
-    const randomString = generateRandomString();
+    const randomString = strict ? '' : generateRandomString();
 
     // Use custom name if provided, otherwise use original filename
     const finalFileName = customName
@@ -72,8 +72,8 @@ async function upload(filePath, bucketPath = '', customName = null) {
 
     // Combine bucket path with filename, ensuring proper path formatting
     const key = bucketPath
-        ? `${bucketPath.replace(/^\/+|\/+$/g, '')}/${randomString}-${finalFileName}`
-        : `${randomString}-${finalFileName}`;
+        ? `${bucketPath.replace(/^\/+|\/+$/g, '')}/${strict ? finalFileName : `${randomString}-${finalFileName}`}`
+        : strict ? finalFileName : `${randomString}-${finalFileName}`;
 
     const fileContent = fs.readFileSync(resolvedPath);
     const contentType = getContentType(resolvedPath);
@@ -159,10 +159,17 @@ async function main() {
             type: 'boolean',
             default: false
         })
+        .option('strict', {
+            alias: 's',
+            describe: 'Upload without generating random string prefix',
+            type: 'boolean',
+            default: false
+        })
         .example('cfdrive --path ./image.jpg', 'Upload image.jpg to the default "temp" path')
         .example('cfdrive --path ./document.pdf --bucket-path documents/2023', 'Upload document.pdf to documents/2023 path')
         .example('cfdrive --path ./image.jpg --name my-photo', 'Upload with custom name "my-photo"')
         .example('cfdrive --path ./image.jpg --no-copy', 'Upload without copying the URL to clipboard')
+        .example('cfdrive --path ./image.jpg --strict', 'Upload without random string prefix')
         .help('h')
         .alias('h', 'help')
         .version()
@@ -170,7 +177,7 @@ async function main() {
         .argv;
 
     try {
-        const key = await upload(argv.path, argv.bucketPath, argv.name);
+        const key = await upload(argv.path, argv.bucketPath, argv.name, argv.strict);
         const downloadUrl = generateDownloadUrl(key);
         console.log(`\nFile uploaded successfully: ${key}`);
         console.log('\nPermanent Download URL:');
