@@ -84,8 +84,7 @@ async function upload(filePath, bucketPath = '', customName = null, strict = fal
         format: 'Uploading [{bar}] {percentage}% | ETA: {eta}s | {value}/{total} bytes',
         barCompleteChar: '\u2588',
         barIncompleteChar: '\u2591',
-        hideCursor: true
-    });
+    }, cliProgress.Presets.shades_classic);
 
     const params = {
         Bucket: process.env.BUCKET_NAME,
@@ -111,14 +110,18 @@ async function upload(filePath, bucketPath = '', customName = null, strict = fal
         // Wait for the upload to complete
         await managedUpload.promise();
 
-        // Stop the progress bar
+        // Stop the progress bar and clear the line
         progressBar.stop();
+        process.stdout.write('\r\x1b[K'); // Clear the current line
+        process.stdout.write('\x1b[1A\x1b[K'); // Move up one line and clear it
 
         console.log(`File uploaded successfully: ${key}`);
         return key;
     } catch (error) {
         // Stop the progress bar in case of error
         progressBar.stop();
+        process.stdout.write('\r\x1b[K'); // Clear the current line
+        process.stdout.write('\x1b[1A\x1b[K'); // Move up one line and clear it
         console.error('Error uploading file:', error);
         throw error;
     }
@@ -134,6 +137,9 @@ function generateDownloadUrl(key) {
 }
 
 async function main() {
+    // Suppress AWS SDK v2 deprecation warnings
+    process.env.AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE = '1';
+
     // Use yargs to parse command line arguments
     const argv = yargs(hideBin(process.argv))
         .usage('Usage: cfdrive --path <file> [options]')
@@ -179,7 +185,6 @@ async function main() {
     try {
         const key = await upload(argv.path, argv.bucketPath, argv.name, argv.strict);
         const downloadUrl = generateDownloadUrl(key);
-        console.log(`\nFile uploaded successfully: ${key}`);
         console.log('\nPermanent Download URL:');
         console.log(downloadUrl);
 

@@ -40,16 +40,24 @@ CUSTOM_BUCKET_URL=https://your-public-bucket-url.com
 
 ```bash
 # Upload a file to the default 'temp' path
-cfdrive upload ./path/to/file.jpg
+cfdrive --path ./file.jpg
+# or using the short alias
+cf --path ./file.jpg
 
-# Upload a file to a custom path
-cfdrive upload ./path/to/file.jpg --path custom/path
+# Upload a file to a custom bucket path
+cfdrive --path ./file.jpg --bucket-path documents/2023
+
+# Upload with a custom name
+cfdrive --path ./file.jpg --name my-photo
+
+# Upload without random string prefix (strict mode)
+cfdrive --path ./file.jpg --strict
+
+# Upload without copying URL to clipboard
+cfdrive --path ./file.jpg --no-copy
 
 # Get help
 cfdrive --help
-
-# Get command-specific help
-cfdrive upload --help
 ```
 
 ## API
@@ -65,6 +73,19 @@ async function uploadFile() {
   console.log(url);
 }
 ```
+
+## Changelog
+
+### v2.0.1 (August 2025)
+- **Fixed**: Terminal display issues with progress bar overlapping text
+- **Improved**: Progress bar now properly clears after completion
+- **Enhanced**: Better terminal output formatting and cleanup
+
+### v2.0.0
+- Initial release with CLI interface
+- Support for Cloudflare R2 uploads
+- Progress bar for upload tracking
+- Automatic URL generation and clipboard copying
 
 ## License
 
