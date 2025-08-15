@@ -7,6 +7,8 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+import clipboardy from 'clipboardy';
+import cliProgress from 'cli-progress';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,8 +23,8 @@ const s3 = new S3({
     signatureVersion: "v4",
 });
 
-function generateRandomString(length = 10) {
-    return crypto.randomBytes(length).toString('hex');
+function generateRandomString(length = 5) {
+    return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
 }
 
 function getContentType(filePath) {
@@ -51,7 +53,7 @@ function getContentType(filePath) {
     return contentTypes[ext] || 'application/octet-stream';
 }
 
-async function upload(filePath, bucketPath = '') {
+async function upload(filePath, bucketPath = '', customName = null) {
     // Resolve the file path relative to the current working directory
     const resolvedPath = path.resolve(process.cwd(), filePath);
 
@@ -60,15 +62,30 @@ async function upload(filePath, bucketPath = '') {
     }
 
     const fileName = path.basename(resolvedPath);
+    const fileExtension = path.extname(resolvedPath);
     const randomString = generateRandomString();
+
+    // Use custom name if provided, otherwise use original filename
+    const finalFileName = customName 
+        ? `${customName}${fileExtension}`
+        : fileName;
 
     // Combine bucket path with filename, ensuring proper path formatting
     const key = bucketPath
-        ? `${bucketPath.replace(/^\/+|\/+$/g, '')}/${randomString}-${fileName}`
-        : `${randomString}-${fileName}`;
+        ? `${bucketPath.replace(/^\/+|\/+$/g, '')}/${randomString}-${finalFileName}`
+        : `${randomString}-${finalFileName}`;
 
     const fileContent = fs.readFileSync(resolvedPath);
     const contentType = getContentType(resolvedPath);
+    const fileSize = fs.statSync(resolvedPath).size;
+
+    // Create a new progress bar
+    const progressBar = new cliProgress.SingleBar({
+        format: 'Uploading [{bar}] {percentage}% | ETA: {eta}s | {value}/{total} bytes',
+        barCompleteChar: '\u2588',
+        barIncompleteChar: '\u2591',
+        hideCursor: true
+    });
 
     const params = {
         Bucket: process.env.BUCKET_NAME,
@@ -78,10 +95,30 @@ async function upload(filePath, bucketPath = '') {
     };
 
     try {
-        await s3.upload(params).promise();
+        console.log(`Starting upload of ${fileName} (${(fileSize / 1024).toFixed(2)} KB)`);
+
+        // Start the progress bar
+        progressBar.start(fileSize, 0);
+
+        // Create a managed upload
+        const managedUpload = s3.upload(params);
+
+        // Add event listener for upload progress
+        managedUpload.on('httpUploadProgress', (progress) => {
+            progressBar.update(progress.loaded);
+        });
+
+        // Wait for the upload to complete
+        await managedUpload.promise();
+
+        // Stop the progress bar
+        progressBar.stop();
+
         console.log(`File uploaded successfully: ${key}`);
         return key;
     } catch (error) {
+        // Stop the progress bar in case of error
+        progressBar.stop();
         console.error('Error uploading file:', error);
         throw error;
     }
@@ -112,10 +149,22 @@ async function main() {
                     describe: 'Bucket path where the file should be stored',
                     type: 'string',
                     default: 'temp'
+                })
+                .option('name', {
+                    alias: 'n',
+                    describe: 'Custom name for the uploaded file (without extension)',
+                    type: 'string'
+                })
+                .option('no-copy', {
+                    describe: 'Disable automatic copying of URL to clipboard',
+                    type: 'boolean',
+                    default: false
                 });
         })
         .example('cfdrive upload ./image.jpg', 'Upload image.jpg to the default "temp" path')
         .example('cfdrive upload ./document.pdf --path documents/2023', 'Upload document.pdf to documents/2023 path')
+        .example('cfdrive upload ./image.jpg --name my-photo', 'Upload with custom name "my-photo"')
+        .example('cfdrive upload ./image.jpg --no-copy', 'Upload without copying the URL to clipboard')
         .demandCommand(1, 'You need to specify a command.')
         .help('h')
         .alias('h', 'help')
@@ -125,11 +174,17 @@ async function main() {
 
     if (argv._[0] === 'upload') {
         try {
-            const key = await upload(argv.file, argv.path);
+            const key = await upload(argv.file, argv.path, argv.name);
             const downloadUrl = generateDownloadUrl(key);
             console.log(`\nFile uploaded successfully: ${key}`);
             console.log('\nPermanent Download URL:');
             console.log(downloadUrl);
+
+            // Copy the URL to clipboard unless --no-copy flag is used
+            if (!argv.noCopy) {
+                await clipboardy.write(downloadUrl);
+                console.log('\nURL copied to clipboard!');
+            }
         } catch (error) {
             console.error('Operation failed:', error);
             process.exit(1);
