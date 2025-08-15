@@ -4,17 +4,17 @@ A simple CLI tool for uploading files to Cloudflare R2 Storage and generating sh
 
 ## Features
 
-- Quick file uploads to Cloudflare R2 Storage
-- Automatic content type detection
-- Generates permanent download URLs
-- Customizable bucket paths
-- Random file name generation for security
+-   Quick file uploads to Cloudflare R2 Storage
+-   Automatic content type detection
+-   Generates permanent download URLs
+-   Customizable bucket paths
+-   Random file name generation for security
 
 ## Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/cfdrive.git
+git clone https://github.com/niellevince/cfdrive.git
 cd cfdrive
 
 # Install dependencies
@@ -68,24 +68,26 @@ This package can also be imported and used programmatically:
 import { upload, generateDownloadUrl } from "cfdrive";
 
 async function uploadFile() {
-  const key = await upload("path/to/file.jpg", "custom/path");
-  const url = generateDownloadUrl(key);
-  console.log(url);
+    const key = await upload("path/to/file.jpg", "custom/path");
+    const url = generateDownloadUrl(key);
+    console.log(url);
 }
 ```
 
 ## Changelog
 
 ### v2.0.1 (August 2025)
-- **Fixed**: Terminal display issues with progress bar overlapping text
-- **Improved**: Progress bar now properly clears after completion
-- **Enhanced**: Better terminal output formatting and cleanup
+
+-   **Fixed**: Terminal display issues with progress bar overlapping text
+-   **Improved**: Progress bar now properly clears after completion
+-   **Enhanced**: Better terminal output formatting and cleanup
 
 ### v2.0.0
-- Initial release with CLI interface
-- Support for Cloudflare R2 uploads
-- Progress bar for upload tracking
-- Automatic URL generation and clipboard copying
+
+-   Initial release with CLI interface
+-   Support for Cloudflare R2 uploads
+-   Progress bar for upload tracking
+-   Automatic URL generation and clipboard copying
 
 ## License
 
