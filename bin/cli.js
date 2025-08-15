@@ -7,8 +7,6 @@ import { main } from '../index.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Ensure we're in the correct directory
-process.chdir(__dirname);
-
-// Run the main function
-main(); 
+// Run the main function without changing directory
+// This preserves the user's current working directory for file path resolution
+main();

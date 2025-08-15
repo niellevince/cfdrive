@@ -1,12 +1,12 @@
 {
     "name": "cfdrive",
-    "version": "1.0.0",
+    "version": "1.1.1",
     "description": "Cloudflare R2 file uploader",
     "main": "index.js",
     "type": "module",
     "bin": {
         "cfdrive": "./bin/cli.js",
-        "cf": "./bin/cf.js"
+        "cf": "./bin/cli.js"
     },
     "scripts": {
         "start": "node index.js"

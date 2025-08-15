@@ -66,7 +66,7 @@ async function upload(filePath, bucketPath = '', customName = null) {
     const randomString = generateRandomString();
 
     // Use custom name if provided, otherwise use original filename
-    const finalFileName = customName 
+    const finalFileName = customName
         ? `${customName}${fileExtension}`
         : fileName;
 
@@ -136,59 +136,54 @@ function generateDownloadUrl(key) {
 async function main() {
     // Use yargs to parse command line arguments
     const argv = yargs(hideBin(process.argv))
-        .usage('Usage: cfdrive <command> [options]')
-        .command('upload <file>', 'Upload a file to Cloudflare R2', (yargs) => {
-            return yargs
-                .positional('file', {
-                    describe: 'File path to upload',
-                    type: 'string',
-                    demandOption: true
-                })
-                .option('path', {
-                    alias: 'p',
-                    describe: 'Bucket path where the file should be stored',
-                    type: 'string',
-                    default: 'temp'
-                })
-                .option('name', {
-                    alias: 'n',
-                    describe: 'Custom name for the uploaded file (without extension)',
-                    type: 'string'
-                })
-                .option('no-copy', {
-                    describe: 'Disable automatic copying of URL to clipboard',
-                    type: 'boolean',
-                    default: false
-                });
+        .usage('Usage: cfdrive --path <file> [options]')
+        .option('path', {
+            alias: 'p',
+            describe: 'File path to upload',
+            type: 'string',
+            demandOption: true
         })
-        .example('cfdrive upload ./image.jpg', 'Upload image.jpg to the default "temp" path')
-        .example('cfdrive upload ./document.pdf --path documents/2023', 'Upload document.pdf to documents/2023 path')
-        .example('cfdrive upload ./image.jpg --name my-photo', 'Upload with custom name "my-photo"')
-        .example('cfdrive upload ./image.jpg --no-copy', 'Upload without copying the URL to clipboard')
-        .demandCommand(1, 'You need to specify a command.')
+        .option('bucket-path', {
+            alias: 'b',
+            describe: 'Bucket path where the file should be stored',
+            type: 'string',
+            default: 'temp'
+        })
+        .option('name', {
+            alias: 'n',
+            describe: 'Custom name for the uploaded file (without extension)',
+            type: 'string'
+        })
+        .option('no-copy', {
+            describe: 'Disable automatic copying of URL to clipboard',
+            type: 'boolean',
+            default: false
+        })
+        .example('cfdrive --path ./image.jpg', 'Upload image.jpg to the default "temp" path')
+        .example('cfdrive --path ./document.pdf --bucket-path documents/2023', 'Upload document.pdf to documents/2023 path')
+        .example('cfdrive --path ./image.jpg --name my-photo', 'Upload with custom name "my-photo"')
+        .example('cfdrive --path ./image.jpg --no-copy', 'Upload without copying the URL to clipboard')
         .help('h')
         .alias('h', 'help')
         .version()
         .epilog('For more information, visit https://github.com/yourusername/cfdrive')
         .argv;
 
-    if (argv._[0] === 'upload') {
-        try {
-            const key = await upload(argv.file, argv.path, argv.name);
-            const downloadUrl = generateDownloadUrl(key);
-            console.log(`\nFile uploaded successfully: ${key}`);
-            console.log('\nPermanent Download URL:');
-            console.log(downloadUrl);
+    try {
+        const key = await upload(argv.path, argv.bucketPath, argv.name);
+        const downloadUrl = generateDownloadUrl(key);
+        console.log(`\nFile uploaded successfully: ${key}`);
+        console.log('\nPermanent Download URL:');
+        console.log(downloadUrl);
 
-            // Copy the URL to clipboard unless --no-copy flag is used
-            if (!argv.noCopy) {
-                await clipboardy.write(downloadUrl);
-                console.log('\nURL copied to clipboard!');
-            }
-        } catch (error) {
-            console.error('Operation failed:', error);
-            process.exit(1);
+        // Copy the URL to clipboard unless --no-copy flag is used
+        if (!argv.noCopy) {
+            await clipboardy.write(downloadUrl);
+            console.log('\nURL copied to clipboard!');
         }
+    } catch (error) {
+        console.error('Operation failed:', error);
+        process.exit(1);
     }
 }
 
