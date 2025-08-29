@@ -1,6 +1,6 @@
 {
     "name": "cfdrive",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "description": "Cloudflare R2 file uploader",
     "main": "index.js",
     "type": "module",

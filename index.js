@@ -13,8 +13,8 @@ import cliProgress from 'cli-progress';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load .env from hardcoded path
-dotenv.config({ path: 'D:\\Utils\\cfdrive\\.env' });
+// Load .env from current project directory
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const s3 = new S3({
     endpoint: `https://${process.env.ACCOUNT_ID}.r2.cloudflarestorage.com`,

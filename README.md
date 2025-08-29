@@ -76,6 +76,12 @@ async function uploadFile() {
 
 ## Changelog
 
+### v2.0.2 (August 2025)
+
+-   **Fixed**: Environment file loading issue - now correctly loads .env from project directory instead of hardcoded path
+-   **Fixed**: "Missing required key 'Bucket' in params" error when running cfdrive command
+-   **Improved**: Better environment configuration handling for different project locations
+
 ### v2.0.1 (August 2025)
 
 -   **Fixed**: Terminal display issues with progress bar overlapping text
